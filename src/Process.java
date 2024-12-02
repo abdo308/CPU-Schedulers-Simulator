@@ -1,4 +1,4 @@
-public class Process {
+public class Process implements Comparable<Process>{
     private int priority;
     private double arrivalTime;
     private double burstTime;
@@ -40,5 +40,10 @@ public class Process {
 
     public void setBurstTime(double burstTime) {
         this.burstTime = burstTime;
+    }
+
+    @Override
+    public int compareTo(Process o) {
+        return Integer.compare(this.priority, o.priority); // Ascending order
     }
 }
