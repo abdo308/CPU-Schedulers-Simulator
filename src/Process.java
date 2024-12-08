@@ -3,12 +3,16 @@ public class Process implements Comparable<Process>{
     private double arrivalTime;
     private double burstTime;
     private String Name;
+    private double timeQuantum;
+    private double contextSwitching;
     // Constructor
-    public Process(String Name,int priority, double arrivalTime, double burstTime) {
+    public Process(String Name,int priority, double arrivalTime, double burstTime, double timeQuantum, double contextSwitching) {
         this.priority = priority;
         this.arrivalTime = arrivalTime;
         this.burstTime = burstTime;
         this.Name=Name;
+        this.timeQuantum = timeQuantum;
+        this.contextSwitching = contextSwitching;
     }
 
     // Getter and Setter methods for fields
@@ -17,6 +21,21 @@ public class Process implements Comparable<Process>{
     }
     public void setName(String Name){
         this.Name=Name;
+    }
+
+    public double getContextSwitching() {
+        return contextSwitching;
+    }
+    public void setContextSwitching(double contextSwitching) {
+        this.contextSwitching = contextSwitching;
+    }
+
+    public double getTimeQuantum() {
+        return timeQuantum;
+    }
+
+    public void setTimeQuantum(double timeQuantum) {
+        this.timeQuantum = timeQuantum;
     }
 
     public int getPriority() {
