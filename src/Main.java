@@ -28,7 +28,7 @@ public class Main {
 
             System.out.println("Enter Process Priority:");
             int Priority=scanner.nextInt();
-            System.out.println("Enter Time Quantum:");
+
 
             Process p=new Process(name,Priority,ArrivalTime,BurstTime, timeQuantum, contextTime);
             processes[i]=p;
@@ -36,16 +36,25 @@ public class Main {
 
         for(int i = 0 ; i < 4; i++){
             SchedulerAlgorithm schedulerAlgorithm;
-            if(i == 0)
+            if(i == 0){
+                System.out.println("Priority Scheduler:\n");
                 schedulerAlgorithm=new PriorityScheduler();
-            else if(i == 1)
+            }
+            else if(i == 1){
+                System.out.println("SJF Scheduler:\n");
                 schedulerAlgorithm = new SJF();
-            else if(i == 2)
+                schedulerAlgorithm.schdule(processes);
+            }
+            else if(i == 2){
+                System.out.println("SRTF Scheduler:\n");
                 schedulerAlgorithm = new SRTF();
-            else
+            }
+            else{
+                System.out.println("FCAI Scheduler:\n");
                 schedulerAlgorithm = new FCAI();
+            }
 
-            schedulerAlgorithm.schdule(processes);
+//            schedulerAlgorithm.schdule(processes);
         }
     }
 }
