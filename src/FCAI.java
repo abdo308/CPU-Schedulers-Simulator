@@ -31,11 +31,25 @@ public class FCAI implements SchedulerAlgorithm {
         PriorityQueue<ProcessData> readyQueue = new PriorityQueue<>(Comparator.comparingDouble(pd -> pd.fcaiFactor));
         List<String> executionTimeline = new ArrayList<>();
 
+
         int completed = 0;
         double currentTime = 0;
 
         // History for detailed execution
         List<ExecutionHistory> executionHistory = new ArrayList<>();
+
+        for (int i = 0; i < n; i++) {
+            if (!isAddedToQueue[i] && processes[i].getArrivalTime() <= currentTime) {
+                int fcaiFactor = calculateFCAIFactor(processes[i], remainingBurstTime[i], V1, V2);
+                readyQueue.add(new ProcessData(i, processes[i], fcaiFactor));
+                isAddedToQueue[i] = true;
+            }
+        }
+
+        ProcessData selectedProcessData = readyQueue.poll();
+        Process selectedProcess = selectedProcessData.process;
+        int currentFcaiFactor = selectedProcessData.fcaiFactor;
+        int processIndex = selectedProcessData.index;
 
         while (completed < n) {
             // Add processes to the ready queue based on arrival time
@@ -47,15 +61,10 @@ public class FCAI implements SchedulerAlgorithm {
                 }
             }
 
-            if (readyQueue.isEmpty()) {
-                currentTime++;
-                continue;
-            }
-
-            // Fetch the process with the smallest FCAI Factor
-            ProcessData selectedProcessData = readyQueue.poll();
-            Process selectedProcess = selectedProcessData.process;
-            int processIndex = selectedProcessData.index;
+//            if (readyQueue.isEmpty()) {
+//                currentTime++;
+//                continue;
+//            }
 
             // Get the current quantum and calculate execution time
             double quantum = quantumMap.get(selectedProcess);
@@ -69,27 +78,81 @@ public class FCAI implements SchedulerAlgorithm {
             // Execute the process
             double startTime = currentTime;
             currentTime += execTime;
+            quantum -= execTime;
             remainingBurstTime[processIndex] -= execTime;
 
-            // Log the execution details
+            while(quantum > 0 && remainingBurstTime[processIndex] > 0 &&  (readyQueue.isEmpty() ||  readyQueue.peek().fcaiFactor > currentFcaiFactor)) {
+                currentTime++;
+                execTime ++;
+                quantum--;
+                remainingBurstTime[processIndex]--;
+
+                for (int i = 0; i < n; i++) {
+                    if (!isAddedToQueue[i] && processes[i].getArrivalTime() <= currentTime) {
+                        int fcaiFactor = calculateFCAIFactor(processes[i], remainingBurstTime[i], V1, V2);
+                        readyQueue.add(new ProcessData(i, processes[i], fcaiFactor));
+                        isAddedToQueue[i] = true;
+                    }
+                }
+            }
+
+
             int newFCAIFactor = calculateFCAIFactor(selectedProcess, remainingBurstTime[processIndex], V1, V2);
-            executionHistory.add(new ExecutionHistory(
-                    (int) startTime, (int) currentTime, selectedProcess, (int) remainingBurstTime[processIndex],
-                    (int) quantum, selectedProcess.getPriority(), newFCAIFactor
-            ));
+
 
             // Update quantum if preempted or process continues
+            double newQuantum = 0;
             if (remainingBurstTime[processIndex] > 0) {
-                double unusedQuantum = quantum - execTime;
-                quantumMap.put(selectedProcess, quantum + unusedQuantum);
-                readyQueue.add(new ProcessData(processIndex, selectedProcess, newFCAIFactor));
+                if(quantum == 0){
+                    newQuantum = quantumMap.get(selectedProcess) + 2;
+                }else{
+                    double unusedQuantum = quantumMap.get(selectedProcess) - execTime;
+                    newQuantum = quantumMap.get(selectedProcess) + unusedQuantum;
+                }
+                quantumMap.put(selectedProcess,  newQuantum);
             } else {
                 // Process completed
+                quantumMap.put(selectedProcess, 0.0);
                 completed++;
                 double finishTime = currentTime;
                 turnaroundTime[processIndex] = finishTime - selectedProcess.getArrivalTime();
                 waitingTime[processIndex] = turnaroundTime[processIndex] - selectedProcess.getBurstTime();
+
+                completionOrder.add(processIndex);
             }
+
+
+            boolean isLoged = false;
+            if(!readyQueue.isEmpty()){
+
+
+                executionHistory.add(new ExecutionHistory(
+                        (int) startTime, (int) currentTime, selectedProcess, (int) remainingBurstTime[processIndex],
+                        (int)newQuantum, selectedProcess.getPriority(), newFCAIFactor
+                ));
+                isLoged = true;
+
+                selectedProcessData = readyQueue.poll();
+
+                if(remainingBurstTime[processIndex] > 0) {
+                    readyQueue.add(new ProcessData(processIndex, selectedProcess, newFCAIFactor));
+                }
+
+
+                selectedProcess = selectedProcessData.process;
+                currentFcaiFactor = selectedProcessData.fcaiFactor;
+                processIndex = selectedProcessData.index;
+
+
+            }
+
+            if(isLoged == false){
+                executionHistory.add(new ExecutionHistory(
+                        (int) startTime, (int) currentTime, selectedProcess, (int) remainingBurstTime[processIndex],
+                        (int)newQuantum, selectedProcess.getPriority(), newFCAIFactor
+                ));
+            }
+
         }
 
         // Print the detailed execution history
@@ -102,6 +165,16 @@ public class FCAI implements SchedulerAlgorithm {
         }
 
         // Calculate and print average times
+
+        System.out.println("Process\tArrival\tBurst\tWaiting\tTurnaround");
+        for (int index : completionOrder) {
+            Process process = processes[index];
+            System.out.printf("%s\t%.1f\t%.1f\n",
+                    process.getName(),
+                    turnaroundTime[index],
+                    waitingTime[index]);
+        }
+
         double avgWaitingTime = Arrays.stream(waitingTime).sum() / n;
         double avgTurnaroundTime = Arrays.stream(turnaroundTime).sum() / n;
 
@@ -110,9 +183,9 @@ public class FCAI implements SchedulerAlgorithm {
     }
 
     private int calculateFCAIFactor(Process process, double remainingBurstTime, double V1, double V2) {
-        double res = (10 - process.getPriority()) + (process.getArrivalTime() / V1) + (remainingBurstTime / V2);
+        double res = (10 - process.getPriority()) + Math.ceil(process.getArrivalTime() / V1) + Math.ceil(remainingBurstTime / V2);
         double ceilRes = Math.ceil(res);
-        return (int) ceilRes;
+        return (int )ceilRes;
     }
 
     private static class ProcessData {

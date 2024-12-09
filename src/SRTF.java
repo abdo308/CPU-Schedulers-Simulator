@@ -59,6 +59,9 @@ public class SRTF implements SchedulerAlgorithm {
             }
         }
 
+
+
+        //        ------------------------------------------
         // Calculate averages
         double totalWaitingTime = 0;
         double totalTurnaroundTime = 0;

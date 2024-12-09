@@ -4,15 +4,15 @@ public class Main {
     static Scanner scanner = new Scanner(System.in);
     public static void main(String[] args) {
 
-
-//        System.out.println("Enter the number of the processes:");
-//        int numberOfProcesses= scanner.nextInt();
         Process[] processes = {
                 new Process("P1", 4, 0, 17, 4, 0),
                 new Process("P2", 9, 3, 6, 3, 0),
                 new Process("P3", 3, 4, 10, 5, 0),
                 new Process("P4", 8, 29, 4, 2, 0)
         };
+
+//        System.out.println("Enter the number of the processes:");
+//        int numberOfProcesses= scanner.nextInt();
 //        Process[]processes=new Process[numberOfProcesses];
 //        for(int i=0; i < numberOfProcesses; ++i){
 //            scanner.nextLine();  // This line is necessary to clear the newline character
@@ -42,26 +42,29 @@ public class Main {
 
         for(int i = 0 ; i < 4; i++){
             if(i > 0){
-//                System.out.println("________________________________________________________________\n");
+                System.out.println("________________________________________________________________\n");
             }
             SchedulerAlgorithm schedulerAlgorithm;
             if(i == 0){
-//                System.out.println("Priority Scheduler:\n");
+                System.out.println("Priority Scheduler:\n");
                 schedulerAlgorithm=new PriorityScheduler();
+
             }
             else if(i == 1){
-//                System.out.println("SJF Scheduler:\n");
+                System.out.println("SJF Scheduler:\n");
                 schedulerAlgorithm = new SJF();
             }
             else if(i == 2){
-//                System.out.println("SRTF Scheduler:\n");
+                System.out.println("SRTF Scheduler:\n");
                 schedulerAlgorithm = new SRTF();
             }
             else{
                 System.out.println("FCAI Scheduler:\n");
                 schedulerAlgorithm = new FCAI();
-                schedulerAlgorithm.schdule(processes);
+
             }
+
+            schedulerAlgorithm.schdule(processes);
 
         }
     }
